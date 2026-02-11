@@ -18,17 +18,16 @@ HoopsNow displays content from the [Ball Don't Lie API](https://www.balldontlie.
 ### Screenshots
 
 <p align="center">
-  <img src="screenshots/games.png" width="200" alt="Games Screen" />
-  <img src="screenshots/teams.png" width="200" alt="Teams Screen" />
-  <img src="screenshots/players.png" width="200" alt="Players Screen" />
-  <img src="screenshots/favorites.png" width="200" alt="Favorites Screen" />
+  <img src="screenshots/games.jpg" width="200" alt="Games Screen" />
+  <img src="screenshots/teams.jpg" width="200" alt="Teams Screen" />
+  <img src="screenshots/players.jpg" width="200" alt="Players Screen" />
+  <img src="screenshots/favorites.jpg" width="200" alt="Favorites Screen" />
 </p>
 
 <p align="center">
-  <img src="screenshots/game_detail.png" width="200" alt="Game Detail" />
-  <img src="screenshots/team_detail.png" width="200" alt="Team Detail" />
-  <img src="screenshots/player_detail.png" width="200" alt="Player Detail" />
-  <img src="screenshots/player_search.png" width="200" alt="Player Search" />
+  <img src="screenshots/game_detail.jpg" width="200" alt="Game Detail" />
+  <img src="screenshots/team_detail.jpg" width="200" alt="Team Detail" />
+  <img src="screenshots/player_detail.jpg" width="200" alt="Player Detail" />
 </p>
 
 ## Architecture

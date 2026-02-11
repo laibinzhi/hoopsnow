@@ -18,17 +18,16 @@ HoopsNow 展示来自 [Ball Don't Lie API](https://www.balldontlie.io/) 的内�
 ### 应用截图
 
 <p align="center">
-  <img src="screenshots/games.png" width="200" alt="比赛页面" />
-  <img src="screenshots/teams.png" width="200" alt="球队页面" />
-  <img src="screenshots/players.png" width="200" alt="球员页面" />
-  <img src="screenshots/favorites.png" width="200" alt="收藏页面" />
+  <img src="screenshots/games.jpg" width="200" alt="比赛页面" />
+  <img src="screenshots/teams.jpg" width="200" alt="球队页面" />
+  <img src="screenshots/players.jpg" width="200" alt="球员页面" />
+  <img src="screenshots/favorites.jpg" width="200" alt="收藏页面" />
 </p>
 
 <p align="center">
-  <img src="screenshots/game_detail.png" width="200" alt="比赛详情" />
-  <img src="screenshots/team_detail.png" width="200" alt="球队详情" />
-  <img src="screenshots/player_detail.png" width="200" alt="球员详情" />
-  <img src="screenshots/player_search.png" width="200" alt="球员搜索" />
+  <img src="screenshots/game_detail.jpg" width="200" alt="比赛详情" />
+  <img src="screenshots/team_detail.jpg" width="200" alt="球队详情" />
+  <img src="screenshots/player_detail.jpg" width="200" alt="球员详情" />
 </p>
 
 ## 架构设计
@@ -84,7 +83,7 @@ core/                       # 核心模块
 
 ### 核心架构决策
 
-- **单向数据流 (UDF)**：状态向下��动，事件向上流动
+- **单向数据流 (UDF)**：状态向下流动，事件向上流动
 - **离线优先**：本地数据库作为数据源，与远程同步
 - **仓库模式**：接口/实现分离以提高可测试性
 - **StateFlow**：ViewModel 中的响应式状态管理
