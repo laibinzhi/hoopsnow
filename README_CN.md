@@ -18,16 +18,16 @@ HoopsNow 展示来自 [Ball Don't Lie API](https://www.balldontlie.io/) 的内�
 ### 应用截图
 
 <p align="center">
-  <img src="screenshots/games.jpg" width="200" alt="比赛页面" />
-  <img src="screenshots/teams.jpg" width="200" alt="球队页面" />
-  <img src="screenshots/players.jpg" width="200" alt="球员页面" />
-  <img src="screenshots/favorites.jpg" width="200" alt="收藏页面" />
+  <img src="screenshots/cmp_game_list.png" width="200" alt="比赛页面" />
+  <img src="screenshots/cmp_teams_list.png" width="200" alt="球队页面" />
+  <img src="screenshots/cmp_player_list.png" width="200" alt="球员页面" />
+  <img src="screenshots/cmp_favorite.png" width="200" alt="收藏页面" />
 </p>
 
 <p align="center">
-  <img src="screenshots/game_detail.jpg" width="200" alt="比赛详情" />
-  <img src="screenshots/team_detail.jpg" width="200" alt="球队详情" />
-  <img src="screenshots/player_detail.jpg" width="200" alt="球员详情" />
+  <img src="screenshots/cmp_game_detail.png" width="200" alt="比赛详情" />
+  <img src="screenshots/cmp_team_detail.png" width="200" alt="球队详情" />
+  <img src="screenshots/cmp_player_detail.png" width="200" alt="球员详情" />
 </p>
 
 ## 架构设计
@@ -50,7 +50,7 @@ hoopsnow/
 │       │   │   ├── core/
 │       │   │   │   ├── common/         # Result 包装器、异常定义
 │       │   │   │   ├── data/           # Repository 接口 + 实现
-│       │   │   │   ���── database/       # DatabaseDriverFactory (expect)
+│       │   │   │   ├── database/       # DatabaseDriverFactory (expect)
 │       │   │   │   ├── model/          # 领域模型 (Game, Team, Player)
 │       │   │   │   └── network/        # Ktor 网络层
 │       │   │   ├── di/                 # Koin 模块定义
@@ -69,8 +69,10 @@ hoopsnow/
 │
 ├── iosApp/                             # iOS 入口（SwiftUI 壳）
 │   └── iosApp/
+│       ├── iosApp.xcodeproj/           # Xcode 工程文件
 │       ├── iOSApp.swift                # 初始化 Koin
-│       └── ContentView.swift           # 嵌入 ComposeUIViewController
+│       ├── ContentView.swift           # 嵌入 ComposeUIViewController
+│       └── Info.plist                  # iOS 配置
 │
 ├── build-logic/                        # Convention Plugins
 └── gradle/libs.versions.toml           # 依赖版本管理
@@ -161,7 +163,7 @@ git checkout cmp
 ### 运行 iOS 应用
 
 1. 构建 shared framework（见上方命令）
-2. 用 Xcode 打开 `iosApp/iosApp.xcodeproj`
+2. 用 Xcode 打开 `iosApp/iosApp/iosApp.xcodeproj`
 3. 选择模拟器，按 ⌘R 运行
 
 详细 iOS 配置请参考 [iOS 接入指南](docs/IOS_INTEGRATION_GUIDE.md)。
@@ -190,7 +192,7 @@ HoopsNow 实现了针对体育内容观看优化的深色主题：
 
 ## 贡献
 
-欢迎贡献！请随时提��� Pull Request。
+欢迎贡献！请随时提交 Pull Request。
 
 1. Fork 本仓库
 2. 创建功能分支（`git checkout -b feature/amazing-feature`）

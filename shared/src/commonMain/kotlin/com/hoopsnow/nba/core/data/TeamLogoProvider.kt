@@ -1,43 +1,57 @@
 package com.hoopsnow.nba.core.data
 
+import hoopsnow.shared.generated.resources.Res
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+
 /**
  * Provides team logo URLs by matching team full names.
  */
 object TeamLogoProvider {
-    private val logoMap: Map<String, String> = mapOf(
-        "Atlanta Hawks" to "https://a.espncdn.com/i/teamlogos/nba/500/atl.png",
-        "Boston Celtics" to "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
-        "Brooklyn Nets" to "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png",
-        "Charlotte Hornets" to "https://a.espncdn.com/i/teamlogos/nba/500/cha.png",
-        "Chicago Bulls" to "https://a.espncdn.com/i/teamlogos/nba/500/chi.png",
-        "Cleveland Cavaliers" to "https://a.espncdn.com/i/teamlogos/nba/500/cle.png",
-        "Dallas Mavericks" to "https://a.espncdn.com/i/teamlogos/nba/500/dal.png",
-        "Denver Nuggets" to "https://a.espncdn.com/i/teamlogos/nba/500/den.png",
-        "Detroit Pistons" to "https://a.espncdn.com/i/teamlogos/nba/500/det.png",
-        "Golden State Warriors" to "https://a.espncdn.com/i/teamlogos/nba/500/gs.png",
-        "Houston Rockets" to "https://a.espncdn.com/i/teamlogos/nba/500/hou.png",
-        "Indiana Pacers" to "https://a.espncdn.com/i/teamlogos/nba/500/ind.png",
-        "LA Clippers" to "https://a.espncdn.com/i/teamlogos/nba/500/lac.png",
-        "Los Angeles Lakers" to "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
-        "Memphis Grizzlies" to "https://a.espncdn.com/i/teamlogos/nba/500/mem.png",
-        "Miami Heat" to "https://a.espncdn.com/i/teamlogos/nba/500/mia.png",
-        "Milwaukee Bucks" to "https://a.espncdn.com/i/teamlogos/nba/500/mil.png",
-        "Minnesota Timberwolves" to "https://a.espncdn.com/i/teamlogos/nba/500/min.png",
-        "New Orleans Pelicans" to "https://a.espncdn.com/i/teamlogos/nba/500/no.png",
-        "New York Knicks" to "https://a.espncdn.com/i/teamlogos/nba/500/ny.png",
-        "Oklahoma City Thunder" to "https://a.espncdn.com/i/teamlogos/nba/500/okc.png",
-        "Orlando Magic" to "https://a.espncdn.com/i/teamlogos/nba/500/orl.png",
-        "Philadelphia 76ers" to "https://a.espncdn.com/i/teamlogos/nba/500/phi.png",
-        "Phoenix Suns" to "https://a.espncdn.com/i/teamlogos/nba/500/phx.png",
-        "Portland Trail Blazers" to "https://a.espncdn.com/i/teamlogos/nba/500/por.png",
-        "Sacramento Kings" to "https://a.espncdn.com/i/teamlogos/nba/500/sac.png",
-        "San Antonio Spurs" to "https://a.espncdn.com/i/teamlogos/nba/500/sa.png",
-        "Toronto Raptors" to "https://a.espncdn.com/i/teamlogos/nba/500/tor.png",
-        "Utah Jazz" to "https://a.espncdn.com/i/teamlogos/nba/500/uta.png",
-        "Washington Wizards" to "https://a.espncdn.com/i/teamlogos/nba/500/wsh.png",
-    )
+    private val logoMap: Map<String, String> by lazy { parseTeamsJson() }
 
     fun getLogoUrl(teamFullName: String): String? = logoMap[teamFullName]
 
     fun getAllLogos(): Map<String, String> = logoMap
+
+    @OptIn(ExperimentalResourceApi::class)
+    private fun parseTeamsJson(): Map<String, String> {
+        return try {
+            val jsonText = runBlocking {
+                Res.readBytes("files/teams.json").decodeToString()
+            }
+            val root = Json.parseToJsonElement(jsonText).jsonObject
+            val teams = root["sports"]?.jsonArray
+                ?.firstOrNull()?.jsonObject
+                ?.get("leagues")?.jsonArray
+                ?.firstOrNull()?.jsonObject
+                ?.get("teams")?.jsonArray
+                ?: return emptyMap()
+
+            buildMap {
+                for (teamItem in teams) {
+                    val team = teamItem.jsonObject["team"]?.jsonObject ?: continue
+                    val displayName = team["displayName"]?.jsonPrimitive?.contentOrNull ?: continue
+                    val logos = team["logos"]?.jsonArray ?: continue
+
+                    val defaultLogoHref = logos.firstNotNullOfOrNull { logoItem ->
+                        val logoObj = logoItem.jsonObject
+                        val rel = logoObj["rel"]?.jsonArray?.mapNotNull { it.jsonPrimitive.contentOrNull }.orEmpty()
+                        if ("default" in rel) logoObj["href"]?.jsonPrimitive?.contentOrNull else null
+                    }
+
+                    if (defaultLogoHref != null) {
+                        put(displayName, defaultLogoHref)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
 }

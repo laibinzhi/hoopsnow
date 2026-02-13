@@ -55,7 +55,7 @@ hoopsnow/
 | 导航 | Navigation3 | Voyager 1.1.0-beta03 | TabNavigator + Navigator |
 | 数据库 | Room | SQLDelight 2.0.2 | .sq 文件定义 SQL |
 | 状态管理 | ViewModel | Voyager ScreenModel | screenModelScope 替代 viewModelScope |
-| 图���加载 | Coil (Android) | Coil 3.0.4 (KMP) | AsyncImage / SubcomposeAsyncImage |
+| 图片加载 | Coil (Android) | Coil 3.0.4 (KMP) | AsyncImage / SubcomposeAsyncImage |
 | 偏好存储 | DataStore | multiplatform-settings 1.2.0 | 跨平台 key-value 存储 |
 | 网络 | Ktor (Android) | Ktor 3.0.3 (KMP) | OkHttp(Android) / Darwin(iOS) |
 | 序列化 | kotlinx-serialization | kotlinx-serialization 1.7.3 | 无变化 |
@@ -341,7 +341,7 @@ class HoopsNowApplication : Application() {
 
 ### 4.6 清理旧代码
 
-迁移完成后删除：
+迁移完成后建议清理（当前仓库仍保留部分 `core/`、`feature/` 历史代码用于参考，但不在 `settings.gradle.kts` 中参与构建）：
 - `core/` — 所有旧 Android 模块（data、database、network、model、ui、designsystem 等）
 - `feature/` — 所有旧 feature 模块（games、teams、players、favorites）
 - `app/` 中的旧导航文件（HoopsNowApp.kt、navigation/）
@@ -384,10 +384,12 @@ hoopsnow/
 │
 ├── iosApp/                                 # iOS SwiftUI 壳
 │   └── iosApp/
+│       ├── iosApp.xcodeproj/               # Xcode 工程文件
 │       ├── iOSApp.swift                    # 初始化 Koin
-│       └── ContentView.swift               # 嵌入 ComposeUIViewController
+│       ├── ContentView.swift               # 嵌入 ComposeUIViewController
+│       └── Info.plist                      # iOS 配置
 │
-├── build-logic/                            # Convention Plugins（仅保留 Application ��关）
+├── build-logic/                            # Convention Plugins（仅保留 Application 相关）
 ├── gradle/libs.versions.toml              # 依赖版本管理
 └── settings.gradle.kts                     # 仅 include :shared 和 :app
 ```

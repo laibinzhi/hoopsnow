@@ -8,6 +8,10 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
             }
         }
+        maven("https://maven.aliyun.com/repository/gradle-plugin")
+        maven("https://maven.aliyun.com/repository/public")
+        maven("https://repo.huaweicloud.com/repository/maven/")
+        maven("https://mirrors.tencent.com/nexus/repository/maven-public/")
         mavenCentral()
         gradlePluginPortal()
     }
@@ -18,6 +22,9 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
+        maven("https://maven.aliyun.com/repository/public")
+        maven("https://repo.huaweicloud.com/repository/maven/")
+        maven("https://mirrors.tencent.com/nexus/repository/maven-public/")
         mavenCentral()
     }
 }

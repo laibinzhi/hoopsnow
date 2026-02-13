@@ -46,6 +46,7 @@ hoopsnow/
 │
 └── iosApp/                          # iOS 应用壳
     └── iosApp/
+        ├── iosApp.xcodeproj/        # Xcode 工程文件
         ├── iOSApp.swift             # App 入口，初始化 Koin
         ├── ContentView.swift        # 嵌入 ComposeUIViewController
         └── Info.plist               # iOS 配置
@@ -93,6 +94,8 @@ shared/build/bin/iosArm64/releaseFramework/Shared.framework
 
 ## 5. Xcode 项目配置
 
+先打开工程文件：`iosApp/iosApp/iosApp.xcodeproj`。
+
 ### 5.1 创建 Xcode 项目
 
 如果还没有 Xcode 项目：
@@ -102,7 +105,7 @@ shared/build/bin/iosArm64/releaseFramework/Shared.framework
 3. Product Name: `iosApp`
 4. Interface: SwiftUI
 5. Language: Swift
-6. 保存到 `hoopsnow/iosApp/` 目录
+6. 保存到 `hoopsnow/iosApp/iosApp/` 目录
 
 ### 5.2 集成 Shared Framework
 
@@ -111,7 +114,7 @@ shared/build/bin/iosArm64/releaseFramework/Shared.framework
 1. 在 Xcode 中选择项目 Target → Build Settings
 2. 搜索 `Framework Search Paths`，添加：
    ```
-   $(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework
+   $(SRCROOT)/../../shared/build/bin/iosSimulatorArm64/debugFramework
    ```
 3. 搜索 `Other Linker Flags`，添加：
    ```
@@ -123,7 +126,7 @@ shared/build/bin/iosArm64/releaseFramework/Shared.framework
 在 Target → Build Phases → 添加 New Run Script Phase（放在 Compile Sources 之前）：
 
 ```bash
-cd "$SRCROOT/.."
+cd "$SRCROOT/../.."
 ./gradlew :shared:embedAndSignAppleFrameworkForXcode
 ```
 
@@ -147,14 +150,14 @@ kotlin {
 }
 ```
 
-然后在 `iosApp/` 目录创建 `Podfile`：
+然后在 `iosApp/iosApp/` 目录创建 `Podfile`：
 
 ```ruby
 platform :ios, '16.0'
 
 target 'iosApp' do
   use_frameworks!
-  pod 'Shared', :path => '../shared'
+  pod 'Shared', :path => '../../shared'
 end
 ```
 
@@ -176,7 +179,7 @@ end
 
 整个 iOS 端只需要两个 Swift 文件：
 
-### 6.1 iOSApp.swift �� 应用入口
+### 6.1 iOSApp.swift — 应用入口
 
 ```swift
 import SwiftUI
@@ -223,7 +226,7 @@ struct ComposeView: UIViewControllerRepresentable {
 
 1. `iOSApp.swift` 在启动时调用 `KoinHelperKt.doInitKoin()` 初始化依赖注入
 2. `ContentView` 通过 `UIViewControllerRepresentable` 将 Compose Multiplatform 的 `ComposeUIViewController` 嵌入 SwiftUI
-3. `MainViewController()` 是 shared 模块中定义的入口，渲染完整的 `HoopsNowApp()` Compose UI
+3. `MainViewController()` 渲染 `HoopsNowApp()`，并注入 `LocalTeamLogos` / `LocalPlayerHeadshot`，确保与 Android 端一致的 logo/头像获取逻辑
 
 ## 7. Shared 模块中的 iOS 平台代码
 
@@ -233,10 +236,22 @@ struct ComposeView: UIViewControllerRepresentable {
 // iosMain
 package com.hoopsnow.nba
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.window.ComposeUIViewController
+import com.hoopsnow.nba.core.data.PlayerHeadshotProvider
+import com.hoopsnow.nba.core.data.TeamLogoProvider
 import com.hoopsnow.nba.ui.HoopsNowApp
+import com.hoopsnow.nba.ui.component.LocalPlayerHeadshot
+import com.hoopsnow.nba.ui.component.LocalTeamLogos
 
-fun MainViewController() = ComposeUIViewController { HoopsNowApp() }
+fun MainViewController() = ComposeUIViewController {
+    CompositionLocalProvider(
+        LocalTeamLogos provides TeamLogoProvider.getAllLogos(),
+        LocalPlayerHeadshot provides PlayerHeadshotProvider::getHeadshotUrl,
+    ) {
+        HoopsNowApp()
+    }
+}
 ```
 
 ### 7.2 KoinHelper.kt — Koin 初始化桥接
@@ -292,7 +307,7 @@ actual class DatabaseDriverFactory {
 
 ### 8.2 通过 Android Studio / Fleet
 
-安装 [Kotlin Multiplatform 插件](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform)，可以��接在 Android Studio 中选择 iOS 模拟器运行。
+安装 [Kotlin Multiplatform 插件](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform)，可以直接在 Android Studio 中选择 iOS 模拟器运行。
 
 ### 8.3 调试技巧
 

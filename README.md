@@ -18,16 +18,16 @@ HoopsNow displays content from the [Ball Don't Lie API](https://www.balldontlie.
 ### Screenshots
 
 <p align="center">
-  <img src="screenshots/games.jpg" width="200" alt="Games Screen" />
-  <img src="screenshots/teams.jpg" width="200" alt="Teams Screen" />
-  <img src="screenshots/players.jpg" width="200" alt="Players Screen" />
-  <img src="screenshots/favorites.jpg" width="200" alt="Favorites Screen" />
+  <img src="screenshots/cmp_game_list.png" width="200" alt="Games Screen" />
+  <img src="screenshots/cmp_teams_list.png" width="200" alt="Teams Screen" />
+  <img src="screenshots/cmp_player_list.png" width="200" alt="Players Screen" />
+  <img src="screenshots/cmp_favorite.png" width="200" alt="Favorites Screen" />
 </p>
 
 <p align="center">
-  <img src="screenshots/game_detail.jpg" width="200" alt="Game Detail" />
-  <img src="screenshots/team_detail.jpg" width="200" alt="Team Detail" />
-  <img src="screenshots/player_detail.jpg" width="200" alt="Player Detail" />
+  <img src="screenshots/cmp_game_detail.png" width="200" alt="Game Detail" />
+  <img src="screenshots/cmp_team_detail.png" width="200" alt="Team Detail" />
+  <img src="screenshots/cmp_player_detail.png" width="200" alt="Player Detail" />
 </p>
 
 ## Architecture
@@ -69,8 +69,10 @@ hoopsnow/
 │
 ├── iosApp/                             # iOS entry point (SwiftUI shell)
 │   └── iosApp/
+│       ├── iosApp.xcodeproj/           # Xcode project
 │       ├── iOSApp.swift                # Initializes Koin
-│       └── ContentView.swift           # Embeds ComposeUIViewController
+│       ├── ContentView.swift           # Embeds ComposeUIViewController
+│       └── Info.plist                  # iOS app config
 │
 ├── build-logic/                        # Convention Plugins
 └── gradle/libs.versions.toml           # Dependency version catalog
@@ -161,7 +163,7 @@ Build iOS Framework (Apple Silicon simulator):
 ### Run on iOS
 
 1. Build the shared framework (see above)
-2. Open `iosApp/iosApp.xcodeproj` in Xcode
+2. Open `iosApp/iosApp/iosApp.xcodeproj` in Xcode
 3. Select a simulator and press ⌘R
 
 For detailed iOS setup, see [iOS Integration Guide](docs/IOS_INTEGRATION_GUIDE.md).
