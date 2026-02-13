@@ -2,9 +2,9 @@
 
 [English](README.md) | 中文文档
 
-**HoopsNow** 是一款专为 NBA 球迷打造的现代 Android 应用，完全使用 **Kotlin** 和 **Jetpack Compose** 构建。它提供实时比赛比分、球队信息、球员数据，并允许用户追踪他们喜爱的球队和球员。
+**HoopsNow** 是一款使用 **Kotlin Multiplatform (KMP)** 和 **Compose Multiplatform (CMP)** 构建的跨平台 NBA 应用，Android 和 iOS 共享同一套代码。它提供实时比赛比分、球队信息、球员数据，并允许用户追踪他们喜爱的球队和球员。
 
-本应用遵循 Android 官方推荐的[架构指南](https://developer.android.com/topic/architecture)，可作为构建生产级 Android 应用的参考实现。
+> 本项目已从传统的 Android 多模块架构（Hilt + Navigation3 + Room）迁移至 KMP 共享模块架构。详见 [迁移指南](docs/ANDROID_TO_KMP_MIGRATION_GUIDE.md)。
 
 ## 功能特性
 
@@ -32,78 +32,73 @@ HoopsNow 展示来自 [Ball Don't Lie API](https://www.balldontlie.io/) 的内�
 
 ## 架构设计
 
-HoopsNow 遵循 [Now in Android](https://github.com/android/nowinandroid) 架构模式，采用模块化结构，将公共 API 契约与内部实现分离。
+HoopsNow 采用 **KMP 共享模块** 架构 — 所有业务逻辑和 UI 代码都在 `shared` 模块中，Android 和 iOS 仅保留极简的平台入口。
 
-### 模块结构
+### 项目结构
 
 ```
-app/                        # 应用模块 - 导航、脚手架
-├── navigation/             # Navigation 3 实现
-
-build-logic/                # Convention Plugins 统一构建配置
-└── convention/             # Gradle 约定插件
-
-feature/                    # 功能模块 (api/impl 模式)
-├── games/
-│   ├── api/                # 公共导航契约 (NavKeys)
-│   └── impl/               # 内部实现 (Screens, ViewModels)
-├── teams/
-│   ├── api/
-│   └── impl/
-├── players/
-│   ├── api/
-│   └── impl/
-└── favorites/
-    ├── api/
-    └── impl/
-
-core/                       # 核心模块
-├── common/                 # 共享工具、调度器、Result 包装器
-├── data/                   # 仓库层 (接口 + 离线优先实现)
-├── database/               # Room 数据库、DAO、实体
-├── datastore/              # DataStore 用户偏好存储
-├── network/                # Retrofit API 实现
-├── model/                  # 领域模型 (纯 Kotlin)
-├── designsystem/           # 主题、颜色、可复用组件
-├── ui/                     # 跨功能共享 UI 组件
-└── testing/                # 测试工具、Fake 实现、测试数据
+hoopsnow/
+├── app/                                # Android 入口（极简）
+│   └── src/main/java/.../
+│       ├── MainActivity.kt             # 承载 HoopsNowApp()
+│       └── HoopsNowApplication.kt      # 初始化 Koin
+│
+├── shared/                             # KMP 共享模块（全部逻辑 + UI）
+│   └── src/
+│       ├── commonMain/                 # 跨平台共享代码
+│       │   ├── kotlin/.../
+│       │   │   ├── core/
+│       │   │   │   ├── common/         # Result 包装器、异常定义
+│       │   │   │   ├── data/           # Repository 接口 + 实现
+│       │   │   │   ���── database/       # DatabaseDriverFactory (expect)
+│       │   │   │   ├── model/          # 领域模型 (Game, Team, Player)
+│       │   │   │   └── network/        # Ktor 网络层
+│       │   │   ├── di/                 # Koin 模块定义
+│       │   │   └── ui/
+│       │   │       ├── HoopsNowApp.kt  # 主入口 Composable
+│       │   │       ├── component/      # 通用 UI 组件
+│       │   │       ├── navigation/     # Voyager Tab 定义
+│       │   │       ├── theme/          # 颜色、字体、主题
+│       │   │       ├── games/          # 比赛 Screen + ScreenModel
+│       │   │       ├── teams/          # 球队 Screen + ScreenModel
+│       │   │       ├── players/        # 球员 Screen + ScreenModel
+│       │   │       └── favorites/      # 收藏 Screen + ScreenModel
+│       │   └── sqldelight/             # .sq 表结构和查询文件
+│       ├── androidMain/                # Android: OkHttp 引擎、SQLite 驱动
+│       └── iosMain/                    # iOS: Darwin 引擎、Native 驱动
+│
+├── iosApp/                             # iOS 入口（SwiftUI 壳）
+│   └── iosApp/
+│       ├── iOSApp.swift                # 初始化 Koin
+│       └── ContentView.swift           # 嵌入 ComposeUIViewController
+│
+├── build-logic/                        # Convention Plugins
+└── gradle/libs.versions.toml           # 依赖版本管理
 ```
-
-### 功能模块模式
-
-每个功能模块分为两个子模块：
-
-- **api**：包含公共导航契约（`NavKey` 定义），其他模块可以依赖
-- **impl**：包含内部实现（Screens、ViewModels、UiState），不对外暴露
-
-这种模式提供：
-- 清晰的模块边界和依赖关系
-- 通过更好的并行化加快构建速度
-- 实现细节的封装
 
 ### 核心架构决策
 
+- **单一共享模块**：所有业务逻辑和 UI 在一个 KMP 模块中，平台入口极简
 - **单向数据流 (UDF)**：状态向下流动，事件向上流动
-- **离线优先**：本地数据库作为数据源，与远程同步
+- **离线优先**：本地数据库作为数据源，与远程 API 同步
 - **仓库模式**：接口/实现分离以提高可测试性
-- **StateFlow**：ViewModel 中的响应式状态管理
-- **密封接口**：类型安全的 UI 状态（Loading、Success、Empty、Error）
-- **Navigation 3**：使用可序列化 NavKeys 的类型安全导航
-- **Convention Plugins**：跨模块的统一构建配置
-- **类型安全项目访问器**：类型安全的模块依赖（`projects.core.data`）
+- **Voyager 导航**：`TabNavigator` 管理底部标签，每个 Tab 内嵌独立 `Navigator` 管理页面栈
+- **ScreenModel**：Voyager 的生命周期感知状态持有者（替代 ViewModel）
+- **Koin DI**：跨平台依赖注入，通过 `expect/actual` 提供平台模块
+- **expect/actual**：数据库驱动和 HTTP 引擎的平台特定实现
 
 ### 数据层架构
 
 ```
 ┌─────────────────────────────────────────┐
 │              UI 层                       │
-│  (Compose Screens + ViewModels)          │
+│  (Compose Screens + ScreenModels)       │
 ├─────────────────────────────────────────┤
 │            数据层                        │
 │  (Repository 接口)                       │
 ├─────────────────────────────────────────┤
 │         离线优先实现                      │
-│  (Room 数据库 + 网络同步)                 │
+│  (SQLDelight 数据库 + Ktor 网络)         │
 └─────────────────────────────────────────┘
 ```
 
@@ -111,17 +106,18 @@ core/                       # 核心模块
 
 | 类别 | 技术 |
 |------|------|
-| 语言 | Kotlin |
-| UI | Jetpack Compose, Material 3 |
-| 导航 | Navigation 3 |
-| 依赖注入 | Hilt |
-| 数据库 | Room |
-| 偏好存储 | DataStore |
-| 网络 | Retrofit, OkHttp, Kotlin Serialization |
-| 异步 | Kotlin Coroutines, Flow |
-| 架构 | MVVM, NIA (Now in Android) 模式 |
+| 语言 | Kotlin 2.0.21 |
+| UI | Compose Multiplatform 1.7.3, Material 3 |
+| 导航 | Voyager 1.1.0-beta03 |
+| 依赖注入 | Koin 4.0.0 |
+| 数据库 | SQLDelight 2.0.2 |
+| 网络 | Ktor 3.0.3, Kotlin Serialization 1.7.3 |
+| 图片加载 | Coil 3.0.4 (KMP) |
+| 异步 | Kotlin Coroutines 1.9.0, Flow |
+| 日期时间 | kotlinx-datetime 0.6.1 |
+| 架构 | UDF、离线优先、仓库模式 |
 | 构建 | Gradle 8.11.1, AGP 8.9.1, Convention Plugins |
-| 测试 | JUnit, Turbine, Coroutines Test |
+| 平台 | Android, iOS |
 
 ## 开发环境
 
@@ -130,6 +126,7 @@ core/                       # 核心模块
 - Android Studio Ladybug (2024.2.1) 或更新版本
 - JDK 17
 - Android SDK 36
+- Xcode 15.0+（iOS 开发需要）
 
 ### 快速开始
 
@@ -137,6 +134,7 @@ core/                       # 核心模块
 ```bash
 git clone https://github.com/laibinzhi/hoopsnow.git
 cd hoopsnow
+git checkout cmp
 ```
 
 2. 在 Android Studio 中打开项目
@@ -145,27 +143,28 @@ cd hoopsnow
 
 ### 构建
 
-构建 Debug APK：
+构建 Android Debug APK：
 ```bash
 ./gradlew :app:assembleDebug
 ```
 
-构建 Release APK：
+构建 Android Release APK：
 ```bash
 ./gradlew :app:assembleRelease
 ```
 
-### 测试
-
-运行单元测试：
+构建 iOS Framework（Apple Silicon 模拟器）：
 ```bash
-./gradlew test
+./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
 ```
 
-`core:testing` 模块提供：
-- **Fake 仓库**：`FakeFavoritesRepository`、`FakePlayersRepository`、`FakeTeamsRepository`、`FakeGamesRepository`
-- **测试工具**：用于协程测试的 `MainDispatcherRule`
-- **测试数据**：用于创建测试对象的 `TestData` 工厂
+### 运行 iOS 应用
+
+1. 构建 shared framework（见上方命令）
+2. 用 Xcode 打开 `iosApp/iosApp.xcodeproj`
+3. 选择模拟器，按 ⌘R 运行
+
+详细 iOS 配置请参考 [iOS 接入指南](docs/IOS_INTEGRATION_GUIDE.md)。
 
 ## API
 
@@ -184,9 +183,14 @@ HoopsNow 实现了针对体育内容观看优化的深色主题：
 - **组件**：自定义比赛卡片、球队/球员列表项
 - **全面屏**：完整的沉浸式体验，正确处理系统边距
 
+## 文档
+
+- [Android 迁移 KMP 指南](docs/ANDROID_TO_KMP_MIGRATION_GUIDE.md) — 从多模块 Android 迁移到 KMP 的完整说明
+- [iOS 接入指南](docs/IOS_INTEGRATION_GUIDE.md) — iOS 应用的构建、配置和运行指南
+
 ## 贡献
 
-欢迎贡献！请随时提交 Pull Request。
+欢迎贡献！请随时提��� Pull Request。
 
 1. Fork 本仓库
 2. 创建功能分支（`git checkout -b feature/amazing-feature`）
@@ -214,6 +218,9 @@ limitations under the License.
 
 ## 致谢
 
-- [Now in Android](https://github.com/android/nowinandroid) - 架构参考
+- [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) - 跨平台框架
+- [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/) - 共享 UI 工具包
+- [Voyager](https://voyager.adriel.cafe/) - 跨平台导航框架
+- [Koin](https://insert-koin.io/) - 依赖注入框架
+- [SQLDelight](https://cashapp.github.io/sqldelight/) - 跨平台数据库
 - [Ball Don't Lie API](https://www.balldontlie.io/) - NBA 数据提供商
-- [Jetpack Compose](https://developer.android.com/jetpack/compose) - 现代 Android UI 工具包

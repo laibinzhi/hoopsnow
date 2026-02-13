@@ -26,25 +26,10 @@ rootProject.name = "HoopsNow"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
+// Shared KMP module
+include(":shared")
+
+// Android app entry point
 include(":app")
 
-// Core modules
-include(":core:common")
-include(":core:model")
-include(":core:data")
-include(":core:database")
-include(":core:datastore")
-include(":core:network")
-include(":core:designsystem")
-include(":core:ui")
-include(":core:testing")
-
-// Feature modules
-include(":feature:games:api")
-include(":feature:games:impl")
-include(":feature:teams:api")
-include(":feature:teams:impl")
-include(":feature:players:api")
-include(":feature:players:impl")
-include(":feature:favorites:api")
-include(":feature:favorites:impl")
+// iOS app is managed by Xcode in iosApp/

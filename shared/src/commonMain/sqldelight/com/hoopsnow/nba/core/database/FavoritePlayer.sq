@@ -1,0 +1,15 @@
+CREATE TABLE FavoritePlayer (
+    playerId INTEGER NOT NULL PRIMARY KEY
+);
+
+getAll:
+SELECT playerId FROM FavoritePlayer;
+
+insert:
+INSERT OR IGNORE INTO FavoritePlayer(playerId) VALUES (?);
+
+delete:
+DELETE FROM FavoritePlayer WHERE playerId = ?;
+
+exists:
+SELECT COUNT(*) FROM FavoritePlayer WHERE playerId = ?;

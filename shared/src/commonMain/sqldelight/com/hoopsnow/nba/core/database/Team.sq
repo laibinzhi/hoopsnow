@@ -1,0 +1,22 @@
+CREATE TABLE TeamEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    conference TEXT NOT NULL,
+    division TEXT NOT NULL,
+    city TEXT NOT NULL,
+    name TEXT NOT NULL,
+    fullName TEXT NOT NULL,
+    abbreviation TEXT NOT NULL
+);
+
+getAll:
+SELECT * FROM TeamEntity ORDER BY name ASC;
+
+getById:
+SELECT * FROM TeamEntity WHERE id = ?;
+
+upsert:
+INSERT OR REPLACE INTO TeamEntity(id, conference, division, city, name, fullName, abbreviation)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+deleteAll:
+DELETE FROM TeamEntity;

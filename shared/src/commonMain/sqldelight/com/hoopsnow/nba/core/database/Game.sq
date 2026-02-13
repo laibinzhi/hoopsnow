@@ -1,0 +1,29 @@
+CREATE TABLE GameEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    date TEXT NOT NULL,
+    season INTEGER NOT NULL,
+    homeTeamScore INTEGER NOT NULL,
+    visitorTeamScore INTEGER NOT NULL,
+    homeTeamId INTEGER NOT NULL,
+    visitorTeamId INTEGER NOT NULL,
+    status TEXT NOT NULL
+);
+
+getAll:
+SELECT * FROM GameEntity ORDER BY date DESC;
+
+getById:
+SELECT * FROM GameEntity WHERE id = ?;
+
+getByDate:
+SELECT * FROM GameEntity WHERE date = ? ORDER BY id ASC;
+
+getByTeamId:
+SELECT * FROM GameEntity WHERE homeTeamId = ? OR visitorTeamId = ? ORDER BY date DESC;
+
+upsert:
+INSERT OR REPLACE INTO GameEntity(id, date, season, homeTeamScore, visitorTeamScore, homeTeamId, visitorTeamId, status)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteAll:
+DELETE FROM GameEntity;

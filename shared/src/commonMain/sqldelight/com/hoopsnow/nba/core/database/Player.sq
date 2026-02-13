@@ -1,0 +1,23 @@
+CREATE TABLE PlayerEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    firstName TEXT NOT NULL,
+    lastName TEXT NOT NULL,
+    position TEXT NOT NULL,
+    teamId INTEGER
+);
+
+getAll:
+SELECT * FROM PlayerEntity ORDER BY lastName ASC;
+
+getById:
+SELECT * FROM PlayerEntity WHERE id = ?;
+
+getByTeamId:
+SELECT * FROM PlayerEntity WHERE teamId = ?;
+
+upsert:
+INSERT OR REPLACE INTO PlayerEntity(id, firstName, lastName, position, teamId)
+VALUES (?, ?, ?, ?, ?);
+
+deleteAll:
+DELETE FROM PlayerEntity;

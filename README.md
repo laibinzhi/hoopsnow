@@ -2,9 +2,9 @@
 
 [中文文档](README_CN.md) | English
 
-**HoopsNow** is a modern Android application for NBA fans, built entirely with **Kotlin** and **Jetpack Compose**. It provides real-time game scores, team information, player stats, and allows users to track their favorite teams and players.
+**HoopsNow** is a cross-platform NBA application built with **Kotlin Multiplatform (KMP)** and **Compose Multiplatform (CMP)**, sharing a single codebase for both Android and iOS. It provides real-time game scores, team information, player stats, and allows users to track their favorite teams and players.
 
-This app follows Android's recommended [architecture guidelines](https://developer.android.com/topic/architecture) and serves as a reference implementation for building production-ready Android applications.
+> This project was migrated from a traditional multi-module Android architecture (Hilt + Navigation3 + Room) to a KMP shared module architecture. See [Migration Guide](docs/ANDROID_TO_KMP_MIGRATION_GUIDE.md) for details.
 
 ## Features
 
@@ -32,78 +32,73 @@ HoopsNow displays content from the [Ball Don't Lie API](https://www.balldontlie.
 
 ## Architecture
 
-HoopsNow follows the [Now in Android](https://github.com/android/nowinandroid) architecture pattern with a modular structure that separates public API contracts from internal implementations.
+HoopsNow uses a **KMP shared module** architecture — all business logic and UI code lives in the `shared` module, with thin platform-specific entry points for Android and iOS.
 
-### Module Structure
+### Project Structure
 
 ```
-app/                        # Application module - navigation, scaffolding
-├── navigation/             # Navigation 3 implementation
-
-build-logic/                # Convention Plugins for consistent build configuration
-└── convention/             # Gradle convention plugins
-
-feature/                    # Feature modules (api/impl pattern)
-├── games/
-│   ├── api/                # Public navigation contracts (NavKeys)
-│   └── impl/               # Internal implementation (Screens, ViewModels)
-├── teams/
-│   ├── api/
-│   └── impl/
-├── players/
-│   ├── api/
-│   └── impl/
-└── favorites/
-    ├── api/
-    └── impl/
-
-core/                       # Core modules
-├── common/                 # Shared utilities, dispatchers, Result wrapper
-├── data/                   # Repositories (interface + offline-first impl)
-├── database/               # Room database, DAOs, entities
-├── datastore/              # DataStore preferences for user data
-├── network/                # Retrofit API implementation
-├── model/                  # Domain models (pure Kotlin)
-├── designsystem/           # Theme, colors, and reusable components
-├── ui/                     # Shared UI components across features
-└── testing/                # Test utilities, fakes, and test data
+hoopsnow/
+├── app/                                # Android entry point (minimal)
+│   └── src/main/java/.../
+│       ├── MainActivity.kt             # Hosts HoopsNowApp()
+│       └── HoopsNowApplication.kt      # Initializes Koin
+│
+├── shared/                             # KMP shared module (all logic + UI)
+│   └── src/
+│       ├── commonMain/                 # Cross-platform shared code
+│       │   ├── kotlin/.../
+│       │   │   ├── core/
+│       │   │   │   ├── common/         # Result wrapper, exceptions
+│       │   │   │   ├── data/           # Repository interfaces + implementations
+│       │   │   │   ├── database/       # DatabaseDriverFactory (expect)
+│       │   │   │   ├── model/          # Domain models (Game, Team, Player)
+│       │   │   │   └── network/        # Ktor network layer
+│       │   │   ├── di/                 # Koin module definitions
+│       │   │   └── ui/
+│       │   │       ├── HoopsNowApp.kt  # Main Composable entry point
+│       │   │       ├── component/      # Shared UI components
+│       │   │       ├── navigation/     # Voyager Tab definitions
+│       │   │       ├── theme/          # Colors, typography, theme
+│       │   │       ├── games/          # Games screens + ScreenModels
+│       │   │       ├── teams/          # Teams screens + ScreenModels
+│       │   │       ├── players/        # Players screens + ScreenModels
+│       │   │       └── favorites/      # Favorites screens + ScreenModels
+│       │   └── sqldelight/             # .sq schema & query files
+│       ├── androidMain/                # Android: OkHttp engine, SQLite driver
+│       └── iosMain/                    # iOS: Darwin engine, Native driver
+│
+├── iosApp/                             # iOS entry point (SwiftUI shell)
+│   └── iosApp/
+│       ├── iOSApp.swift                # Initializes Koin
+│       └── ContentView.swift           # Embeds ComposeUIViewController
+│
+├── build-logic/                        # Convention Plugins
+└── gradle/libs.versions.toml           # Dependency version catalog
 ```
-
-### Feature Module Pattern
-
-Each feature module is split into two submodules:
-
-- **api**: Contains public navigation contracts (`NavKey` definitions) that other modules can depend on
-- **impl**: Contains internal implementation (Screens, ViewModels, UiState) that should not be exposed
-
-This pattern provides:
-- Clear module boundaries and dependencies
-- Faster build times through better parallelization
-- Encapsulation of implementation details
 
 ### Key Architecture Decisions
 
+- **Single Shared Module**: All business logic and UI in one KMP module, platform entry points are minimal
 - **Unidirectional Data Flow (UDF)**: State flows down, events flow up
-- **Offline-First**: Local database is the source of truth, synced with remote
-- **Repository Pattern**: Interface/Implementation separation for testability
-- **StateFlow**: Reactive state management in ViewModels
-- **Sealed Interfaces**: Type-safe UI states (Loading, Success, Empty, Error)
-- **Navigation 3**: Type-safe navigation with serializable NavKeys
-- **Convention Plugins**: Consistent build configuration across modules
-- **Typesafe Project Accessors**: Type-safe module dependencies (`projects.core.data`)
+- **Offline-First**: Local database as source of truth, synced with remote API
+- **Repository Pattern**: Interface/implementation separation for testability
+- **Voyager Navigation**: `TabNavigator` for bottom tabs, nested `Navigator` per tab for page stacks
+- **ScreenModel**: Voyager's lifecycle-aware state holder (replaces ViewModel)
+- **Koin DI**: Cross-platform dependency injection with `expect/actual` platform modules
+- **expect/actual**: Platform-specific implementations for database drivers and HTTP engines
 
 ### Data Layer Architecture
 
 ```
 ┌─────────────────────────────────────────┐
 │              UI Layer                    │
-│  (Compose Screens + ViewModels)          │
+│  (Compose Screens + ScreenModels)       │
 ├─────────────────────────────────────────┤
 │            Data Layer                    │
-│  (Repository Interfaces)                 │
+│  (Repository Interfaces)                │
 ├─────────────────────────────────────────┤
-│     Offline-First Implementations        │
-│  (Room Database + Network Sync)          │
+│     Offline-First Implementations       │
+│  (SQLDelight Database + Ktor Network)   │
 └─────────────────────────────────────────┘
 ```
 
@@ -111,17 +106,18 @@ This pattern provides:
 
 | Category | Technology |
 |----------|------------|
-| Language | Kotlin |
-| UI | Jetpack Compose, Material 3 |
-| Navigation | Navigation 3 |
-| DI | Hilt |
-| Database | Room |
-| Preferences | DataStore |
-| Networking | Retrofit, OkHttp, Kotlin Serialization |
-| Async | Kotlin Coroutines, Flow |
-| Architecture | MVVM, NIA (Now in Android) Pattern |
+| Language | Kotlin 2.0.21 |
+| UI | Compose Multiplatform 1.7.3, Material 3 |
+| Navigation | Voyager 1.1.0-beta03 |
+| DI | Koin 4.0.0 |
+| Database | SQLDelight 2.0.2 |
+| Networking | Ktor 3.0.3, Kotlin Serialization 1.7.3 |
+| Image Loading | Coil 3.0.4 (KMP) |
+| Async | Kotlin Coroutines 1.9.0, Flow |
+| Date/Time | kotlinx-datetime 0.6.1 |
+| Architecture | UDF, Offline-First, Repository Pattern |
 | Build | Gradle 8.11.1, AGP 8.9.1, Convention Plugins |
-| Testing | JUnit, Turbine, Coroutines Test |
+| Platforms | Android, iOS |
 
 ## Development Environment
 
@@ -130,6 +126,7 @@ This pattern provides:
 - Android Studio Ladybug (2024.2.1) or newer
 - JDK 17
 - Android SDK 36
+- Xcode 15.0+ (for iOS)
 
 ### Getting Started
 
@@ -137,6 +134,7 @@ This pattern provides:
 ```bash
 git clone https://github.com/laibinzhi/hoopsnow.git
 cd hoopsnow
+git checkout cmp
 ```
 
 2. Open the project in Android Studio
@@ -145,27 +143,28 @@ cd hoopsnow
 
 ### Build
 
-Build the debug APK:
+Build Android Debug APK:
 ```bash
 ./gradlew :app:assembleDebug
 ```
 
-Build the release APK:
+Build Android Release APK:
 ```bash
 ./gradlew :app:assembleRelease
 ```
 
-### Testing
-
-Run unit tests:
+Build iOS Framework (Apple Silicon simulator):
 ```bash
-./gradlew test
+./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
 ```
 
-The `core:testing` module provides:
-- **Fake Repositories**: `FakeFavoritesRepository`, `FakePlayersRepository`, `FakeTeamsRepository`, `FakeGamesRepository`
-- **Test Utilities**: `MainDispatcherRule` for coroutine testing
-- **Test Data**: `TestData` factory for creating test objects
+### Run on iOS
+
+1. Build the shared framework (see above)
+2. Open `iosApp/iosApp.xcodeproj` in Xcode
+3. Select a simulator and press ⌘R
+
+For detailed iOS setup, see [iOS Integration Guide](docs/IOS_INTEGRATION_GUIDE.md).
 
 ## API
 
@@ -183,6 +182,11 @@ HoopsNow implements a dark theme optimized for sports content viewing:
 - **Typography**: Bold, sports-inspired text hierarchy
 - **Components**: Custom game cards, team/player list items
 - **Edge-to-Edge**: Full immersive experience with proper inset handling
+
+## Documentation
+
+- [Android to KMP Migration Guide](docs/ANDROID_TO_KMP_MIGRATION_GUIDE.md) — Full migration walkthrough from multi-module Android to KMP
+- [iOS Integration Guide](docs/IOS_INTEGRATION_GUIDE.md) — How to build, configure, and run the iOS app
 
 ## Contributing
 
@@ -214,6 +218,9 @@ limitations under the License.
 
 ## Acknowledgments
 
-- [Now in Android](https://github.com/android/nowinandroid) - Architecture reference
+- [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) - Cross-platform framework
+- [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/) - Shared UI toolkit
+- [Voyager](https://voyager.adriel.cafe/) - Multiplatform navigation
+- [Koin](https://insert-koin.io/) - Dependency injection
+- [SQLDelight](https://cashapp.github.io/sqldelight/) - Multiplatform database
 - [Ball Don't Lie API](https://www.balldontlie.io/) - NBA data provider
-- [Jetpack Compose](https://developer.android.com/jetpack/compose) - Modern Android UI toolkit
