@@ -6,6 +6,21 @@
 
 本应用遵循 Android 官方推荐的[架构指南](https://developer.android.com/topic/architecture)，可作为构建生产级 Android 应用的参考实现。
 
+## 分支说明
+
+本仓库当前维护两个长期分支：
+
+- `main`（当前分支）：Android 单平台实现，采用多模块架构（`Hilt + Navigation 3 + Room`）
+- `cmp`：基于 Kotlin Multiplatform + Compose Multiplatform 的跨平台实现，共享 Android/iOS 代码（`Koin + Voyager + SQLDelight`）
+
+切换到 CMP 分支：
+
+```bash
+git checkout cmp
+```
+
+如果你想对比两套实现，建议先阅读 `main`，再切换到 `cmp`。
+
 ## 功能特性
 
 HoopsNow 展示来自 [Ball Don't Lie API](https://www.balldontlie.io/) 的内容，提供：

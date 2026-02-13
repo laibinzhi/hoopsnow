@@ -6,6 +6,21 @@
 
 This app follows Android's recommended [architecture guidelines](https://developer.android.com/topic/architecture) and serves as a reference implementation for building production-ready Android applications.
 
+## Branch Guide
+
+This repository currently keeps two long-lived branches:
+
+- `main` (current): Android-only implementation based on multi-module architecture (`Hilt + Navigation 3 + Room`)
+- `cmp`: Kotlin Multiplatform + Compose Multiplatform implementation with shared Android/iOS code (`Koin + Voyager + SQLDelight`)
+
+Switch to the CMP branch:
+
+```bash
+git checkout cmp
+```
+
+If you want to compare both approaches, review `main` first and then switch to `cmp`.
+
 ## Features
 
 HoopsNow displays content from the [Ball Don't Lie API](https://www.balldontlie.io/), providing:
